@@ -1,0 +1,90 @@
+alias: Kaktusvalo kellon mukaan
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - schedule.cactus_light
+    to: "on"
+    id: Valo päälle
+    from: "off"
+  - platform: state
+    entity_id:
+      - schedule.cactus_light
+    to: "off"
+    id: Valo pois
+    from: "on"
+  - platform: numeric_state
+    entity_id:
+      - sensor.cactus_light_sensor_illuminance_lux
+    above: 999.9
+    id: aurinko paistaa
+  - platform: numeric_state
+    entity_id:
+      - sensor.cactus_light_sensor_illuminance_lux
+    below: 1000
+    id: aurinko pilvessä
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: trigger
+                id:
+                  - Valo päälle
+              - condition: numeric_state
+                entity_id: sensor.cactus_light_sensor_illuminance_lux
+                below: 1000
+        sequence:
+          - service: switch.turn_on
+            data: {}
+            target:
+              device_id: 79c93a6624c0c17b47df2720ae1b01fe
+      - conditions:
+          - condition: trigger
+            id:
+              - Valo pois
+        sequence:
+          - service: switch.turn_off
+            data: {}
+            target:
+              device_id: 79c93a6624c0c17b47df2720ae1b01fe
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: trigger
+                id:
+                  - aurinko paistaa
+              - condition: state
+                entity_id: schedule.cactus_light
+                state: "on"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: timer.cactustimer
+                    state: active
+        sequence:
+          - type: turn_off
+            device_id: 79c93a6624c0c17b47df2720ae1b01fe
+            entity_id: f823406253650e25f1d4da0cc01333a1
+            domain: switch
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: trigger
+                id:
+                  - aurinko pilvessä
+              - condition: state
+                entity_id: schedule.cactus_light
+                state: "on"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: timer.cactustimer
+                    state: active
+        sequence:
+          - type: turn_on
+            device_id: 79c93a6624c0c17b47df2720ae1b01fe
+            entity_id: f823406253650e25f1d4da0cc01333a1
+            domain: switch
+mode: single
